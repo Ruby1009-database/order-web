@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>向日葵廚房</title>
+     <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .menu-item { margin: 10px 0; }
+    h1 {
+      background-color: #fff176; /* 黃色背景 */
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .category {
+      margin-top: 30px;
+    }
+
+    .item {
+      margin: 5px 0;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    button {
+      margin-left: 5px;
+    }
+
+    input, textarea {
+      margin-bottom: 10px;
+      width: 100%;
+      padding: 5px;
+    }
+
+    #cart {
+      background-color: #f0f8ff; /* 淺藍背景的購物車區塊 */
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .category {
+    margin-top: 30px;
+    background-color: #fffde7; /* 綠色背景 */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  </style>
+</head>
+<body>
+<h1>歡迎來到向日葵廚房早餐店</h1>
+
+<h2>菜單</h2>
+  <div id="menu"></div>
+
+ <h3>購物車</h3>
+  <div id="cart"></div>
+  <p id="total">總金額：$0</p>
+  <button onclick="checkout()">送出訂單</button>
+
+  <h3>填寫資料</h3>
+  <form id="orderForm">
+    <input type="text" id="name" placeholder="姓名" required>
+    <input type="tel" id="phone" placeholder="電話" required>
+    <textarea id="note" placeholder="備註（例如：少冰、不要辣）"></textarea>
+    <button type="submit">送出訂單</button>
+  </form>
+
+  <script>
+    const menu = [
+    {
+        category: "吐司類",
+        items: [
+      { id: 1, name: "火腿蛋", price: 35 },
+      { id: 2, name: "肉鬆蛋", price: 35 },
+       { id: 3, name: "燒肉蛋", price: 45 },
+       { id: 4, name: "雞排蛋", price: 45 },
+       { id: 5, name: "鮪魚蛋", price: 45 },
+       { id: 6, name: "草莓", price: 20 },
+       { id: 7, name: "巧克力", price: 20 },
+       { id: 8, name: "花生", price: 20 }
+       ]
+      },
+      {
+        category: "漢堡類",
+        items: [
+          { id: 9, name: "牛肉堡", price: 60 },
+          { id: 10, name: "雞腿堡", price: 65 },
+          { id: 11, name: "豬排堡", price: 55 },
+          { id: 12, name: "鮪魚堡", price: 45 }
+        ]
+      },
+      {
+        category: "飲料類",
+        items: [
+          { id: 13, name: "紅茶", price: 20 },
+          { id: 14, name: "奶茶", price: 25 },
+          { id: 15, name: "美式", price: 40 },
+          { id: 16, name: "拿鐵", price: 50 },
+          { id: 17, name: "鮮奶茶", price: 45 },
+          { id: 18, name: "豆漿", price: 20 }
+        ]
+      }
+    ];
+   const cart = [];
+
+    function renderMenu() {
+      const menuDiv = document.getElementById("menu");
+      menuDiv.innerHTML = '';
+      menu.forEach(group => {
+        const catDiv = document.createElement("div");
+        catDiv.className = "category";
+        catDiv.innerHTML = `<h3>${group.category}</h3>`;
+        group.items.forEach(item => {
+          const itemDiv = document.createElement("div");
+          itemDiv.className = "item";
+          itemDiv.innerHTML = `
+            ${item.name} - $${item.price}
+            <button onclick="addToCart(${item.id})">加入</button>`;
+          catDiv.appendChild(itemDiv);
+        });
+        menuDiv.appendChild(catDiv);
+      });
+    }
+
+    function addToCart(id) {
+      const item = menu.flatMap(c => c.items).find(i => i.id === id);
+      const existing = cart.find(i => i.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...item, quantity: 1 });
+      }
+      renderCart();
+    }
+
+    function updateQuantity(id, change) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.quantity += change;
+        if (item.quantity <= 0) {
+          const index = cart.findIndex(i => i.id === id);
+          cart.splice(index, 1);
+        }
+        renderCart();
+      }
+    }
+
+    function removeItem(id) {
+      const index = cart.findIndex(i => i.id === id);
+      if (index !== -1) {
+        cart.splice(index, 1);
+        renderCart();
+      }
+    }
+
+    function renderCart() {
+      const cartDiv = document.getElementById("cart");
+      cartDiv.innerHTML = '';
+      let total = 0;
+
+      cart.forEach(item => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "cart-item";
+        itemDiv.innerHTML = `
+          ${item.name} - $${item.price} x ${item.quantity}
+          <div>
+            <button onclick="updateQuantity(${item.id}, 1)">＋</button>
+            <button onclick="updateQuantity(${item.id}, -1)">－</button>
+            <button onclick="removeItem(${item.id})">刪除</button>
+          </div>
+        `;
+        total += item.price * item.quantity;
+        cartDiv.appendChild(itemDiv);
+      });
+
+      document.getElementById("total").textContent = `總金額：$${total}`;
+    }
+
+    document.getElementById("orderForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (cart.length === 0) {
+        alert("購物車是空的！");
+        return;
+      }
+
+      const name = document.getElementById("name").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const note = document.getElementById("note").value.trim();
+
+      const order = {
+        name,
+        phone,
+        note,
+        items: cart,
+        total: cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+      };
+
+      console.log("訂單內容：", order); // 可改為送 API、儲存等
+      alert("訂單已送出，感謝您的購買！");
+
+      // 清空
+      document.getElementById("orderForm").reset();
+      cart.length = 0;
+      renderCart();
+    });
+
+    renderMenu();
+  </script>
+</body>
+</html>
